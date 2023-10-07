@@ -2,15 +2,17 @@
 <html>
 <header>
   <title>HTMLX TODO</title>
-  <script src="https://unpkg.com/htmx.org@1.9.6"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"/>
+  <!-- <script src="https://unpkg.com/htmx.org@1.9.6"></script> -->
+  <script src="/static/htmx.org@1.9.6"></script>
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"/> -->
+  <link rel="stylesheet" href="/static/pico.min.css"/>
   <link rel="stylesheet" href="/static/style.css"/>
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico"/>
 </header>
 
 <body>
 <main class="container">
-  <h1>Super HTML<i>X</i> TODO App</h1>
+  <h1>Super HTM<i>X</i> TODO App</h1>
   <ul id="todos" hx-post="/front/add-todo" hx-trigger="load" hx-swap="innerHTML">
   </ul>
   <form hx-post="/front/add-todo"  hx-target="#todos">

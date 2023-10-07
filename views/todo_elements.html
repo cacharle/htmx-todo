@@ -1,3 +1,16 @@
-{{ range . }}
-<li>{{ . }}</li>
+{{ range .Todos -}}
+<li>
+  {{- if .Done -}}
+    <del>{{ .Content }}</del>
+  {{- else -}}
+    {{ .Content }}
+  {{- end -}}
+  <input
+    type="checkbox"
+    {{ if .Done }} checked="checked" {{ end }}
+    hx-post="/front/add-todo"
+    hx-target="#todos"
+    hx-trigger="click"
+  />
+</li>
 {{ end }}
