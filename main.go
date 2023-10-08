@@ -28,7 +28,7 @@ func homeHandler(c *fiber.Ctx) error {
 var todoElementsTemplate = template.New("todo-elements")
 
 func listTodoHandler(c *fiber.Ctx) error {
-	return c.Status(200).Render("views/todo_elements", fiber.Map{"Todos": todos})
+	return c.Status(200).Render("views/todos/list", fiber.Map{"Todos": todos})
 }
 
 func addTodoHandler(c *fiber.Ctx) error {
@@ -80,6 +80,15 @@ func patchTodoHandler(c *fiber.Ctx) error {
 	return listTodoHandler(c)
 }
 
+func todoEditHandler(c *fiber.Ctx) error {
+	i, err := parseTodoIndex(c.Params("index"))
+	if err != nil {
+		log.Println(err)
+		return c.SendStatus(500)
+	}
+	return c.Render("views/todos/edit", fiber.Map{"Index": i, "Todo": todos[i]})
+}
+
 //go:embed views/*
 var viewsFS embed.FS
 
@@ -88,12 +97,13 @@ func main() {
 	todos = append(todos, TodoItem{Content: "Some other task", Done: true})
 	viewEngine := html.NewFileSystem(http.FS(viewsFS), ".html")
 	app := fiber.New(fiber.Config{Views: viewEngine})
-	app.Static("/static", "./static")
+	app.Static("/", "./static")
 	app.Use(logger.New())
 	app.Get("/", homeHandler)
 	app.Get("/front/todos", listTodoHandler)
 	app.Post("/front/todos", addTodoHandler)
 	app.Patch("/front/todos/:index", patchTodoHandler)
 	app.Delete("/front/todos/:index", deleteTodoHandler)
+	app.Get("/front/todos/edit/:index", todoEditHandler)
 	log.Fatal(app.Listen(":8080"))
 }

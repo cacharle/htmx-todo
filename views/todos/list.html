@@ -8,7 +8,7 @@
     hx-target="#todos"
     hx-trigger="click"
   />
-  <span class="todo-content">
+  <span class="todo-content" hx-get="/front/todos/edit/{{ $i }}" ht-trigger="click" hx-swap="outerHTML">
   {{- if $t.Done -}}
     <del>{{ $t.Content }}</del>
   {{- else -}}

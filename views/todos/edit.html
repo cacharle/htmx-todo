@@ -1,0 +1,8 @@
+<input
+  type="text"
+  name="content"
+  value="{{ .Todo.Content }}"
+  hx-patch="/front/todos/{{ .Index }}"
+  hx-target="#todos"
+  hx-trigger="keyup[keyCode == 13]"
+/>
