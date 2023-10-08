@@ -1,16 +1,19 @@
-{{ range .Todos -}}
+{{ range $i, $t := .Todos -}}
 <li>
-  {{- if .Done -}}
-    <del>{{ .Content }}</del>
-  {{- else -}}
-    {{ .Content }}
-  {{- end -}}
   <input
+    name="done"
     type="checkbox"
-    {{ if .Done }} checked="checked" {{ end }}
-    hx-post="/front/add-todo"
+    {{ if $t.Done }} checked="checked" {{ end }}
+    hx-patch="/front/todos/{{ $i }}"
     hx-target="#todos"
     hx-trigger="click"
   />
+  <span class="todo-content">
+  {{- if $t.Done -}}
+    <del>{{ $t.Content }}</del>
+  {{- else -}}
+    {{ $t.Content }}
+  {{- end -}}
+  </div>
 </li>
 {{ end }}

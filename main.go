@@ -15,9 +15,8 @@ import (
 )
 
 type TodoItem struct {
-	Index int
 	Content string
-	Done bool
+	Done    bool
 }
 
 var todos []TodoItem = make([]TodoItem, 0)
@@ -35,7 +34,7 @@ func listTodoHandler(c *fiber.Ctx) error {
 func addTodoHandler(c *fiber.Ctx) error {
 	todoContent := strings.Clone(strings.TrimSpace(c.FormValue("content")))
 	if todoContent != "" {
-		todos = append(todos, TodoItem{Index: len(todos), Content: todoContent, Done: false})
+		todos = append(todos, TodoItem{Content: todoContent, Done: false})
 	}
 	return listTodoHandler(c)
 }
@@ -47,7 +46,7 @@ func parseTodoIndex(indexString string) (int, error) {
 		return 0, err
 	}
 	if i > len(todos) {
-		return 0, errors.New("Index out of bound")
+		return 0, errors.New("index out of bound")
 	}
 	return i, nil
 }
@@ -69,9 +68,15 @@ func patchTodoHandler(c *fiber.Ctx) error {
 		return listTodoHandler(c)
 	}
 	todoContent := strings.Clone(strings.TrimSpace(c.FormValue("content")))
-	// todoDone := strings.Clone(strings.TrimSpace(c.FormValue("done")))
-	todos[i].Content = todoContent
-	// todos[i].Done = if todoDone ==
+	todoDone := c.FormValue("done", "off")
+	if todoContent != "" {
+		todos[i].Content = todoContent
+	}
+	if todoDone == "on" {
+		todos[i].Done = true
+	} else {
+		todos[i].Done = false
+	}
 	return listTodoHandler(c)
 }
 
