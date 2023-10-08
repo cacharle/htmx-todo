@@ -1,7 +1,11 @@
 package main
 
 import (
+	"embed"
+	"errors"
 	"log"
+	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -11,6 +15,7 @@ import (
 )
 
 type TodoItem struct {
+	Index int
 	Content string
 	Done bool
 }
@@ -18,29 +23,72 @@ type TodoItem struct {
 var todos []TodoItem = make([]TodoItem, 0)
 
 func homeHandler(c *fiber.Ctx) error {
-	return c.Status(200).Render("index", nil)
+	return c.Status(200).Render("views/index", nil)
 }
 
 var todoElementsTemplate = template.New("todo-elements")
 
-func addTodoHandler(c *fiber.Ctx) error {
-	todo_content := strings.Clone(strings.TrimSpace(c.FormValue("todo")))
-	if todo_content != "" {
-		todos = append(todos, TodoItem{Content: todo_content, Done: false})
-	}
-	return c.Status(200).Render("todo_elements", fiber.Map{"Todos": todos})
+func listTodoHandler(c *fiber.Ctx) error {
+	return c.Status(200).Render("views/todo_elements", fiber.Map{"Todos": todos})
 }
+
+func addTodoHandler(c *fiber.Ctx) error {
+	todoContent := strings.Clone(strings.TrimSpace(c.FormValue("content")))
+	if todoContent != "" {
+		todos = append(todos, TodoItem{Index: len(todos), Content: todoContent, Done: false})
+	}
+	return listTodoHandler(c)
+}
+
+func parseTodoIndex(indexString string) (int, error) {
+	i, err := strconv.Atoi(indexString)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	if i > len(todos) {
+		return 0, errors.New("Index out of bound")
+	}
+	return i, nil
+}
+
+func deleteTodoHandler(c *fiber.Ctx) error {
+	i, err := parseTodoIndex(c.Params("index"))
+	if err != nil {
+		log.Println(err)
+		return listTodoHandler(c)
+	}
+	todos = append(todos[:i], todos[:i+1]...)
+	return listTodoHandler(c)
+}
+
+func patchTodoHandler(c *fiber.Ctx) error {
+	i, err := parseTodoIndex(c.Params("index"))
+	if err != nil {
+		log.Println(err)
+		return listTodoHandler(c)
+	}
+	todoContent := strings.Clone(strings.TrimSpace(c.FormValue("content")))
+	// todoDone := strings.Clone(strings.TrimSpace(c.FormValue("done")))
+	todos[i].Content = todoContent
+	// todos[i].Done = if todoDone ==
+	return listTodoHandler(c)
+}
+
+//go:embed views/*
+var viewsFS embed.FS
 
 func main() {
 	todos = append(todos, TodoItem{Content: "Some task", Done: false})
 	todos = append(todos, TodoItem{Content: "Some other task", Done: true})
-	viewEngine := html.New("./views", ".html")
-	template.Must(template.ParseGlob("views/*"))
-	// log.Fatal(tpl.ExecuteTemplate(os.Stdout, "todo_elements.html", todos))
+	viewEngine := html.NewFileSystem(http.FS(viewsFS), ".html")
 	app := fiber.New(fiber.Config{Views: viewEngine})
 	app.Static("/static", "./static")
 	app.Use(logger.New())
 	app.Get("/", homeHandler)
-	app.Post("/front/add-todo", addTodoHandler)
+	app.Get("/front/todos", listTodoHandler)
+	app.Post("/front/todos", addTodoHandler)
+	app.Patch("/front/todos/:index", patchTodoHandler)
+	app.Delete("/front/todos/:index", deleteTodoHandler)
 	log.Fatal(app.Listen(":8080"))
 }
